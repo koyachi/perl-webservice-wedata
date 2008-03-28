@@ -1,0 +1,4 @@
+{
+          'blib' => 1,
+          'WebService-Wedata-*' => 1
+        }
