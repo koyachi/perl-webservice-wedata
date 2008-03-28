@@ -3,6 +3,10 @@ use WebService::Wedata;
 use LWP::UserAgent;
 use Data::Dumper;
 
+SKIP: 
+{
+    skip 'experimental';
+
 my $ua = LWP::UserAgent->new;
 my $params = {
     ua => $ua,
@@ -23,3 +27,4 @@ $database->update;
 $database->delete;
 
 
+}

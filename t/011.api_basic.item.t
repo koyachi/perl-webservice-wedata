@@ -2,8 +2,7 @@ use Test::More tests => 18;
 use WebService::Wedata;
 use Data::Dumper;
 
-#my $my_api_key = 'YOUR_API_KEY';
-my $my_api_key = '3a05eaa38f8ae99546f683105181f8659d726f2b';
+my $my_api_key = 'YOUR_API_KEY';
 my $now = time;
 my $db_name = 'test_db_from_WebService::Wedata' . $now;
 my $item_name = 'test_db_from_WebService::Wedata::Item' . $now;

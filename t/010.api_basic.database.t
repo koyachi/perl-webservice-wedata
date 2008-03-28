@@ -3,8 +3,7 @@ use WebService::Wedata;
 use Data::Dumper;
 
 
-#my $my_api_key = 'YOUR_API_KEY';
-my $my_api_key = '3a05eaa38f8ae99546f683105181f8659d726f2b';
+my $my_api_key = 'YOUR_API_KEY';
 my $wedata = WebService::Wedata->new($my_api_key);
 
 

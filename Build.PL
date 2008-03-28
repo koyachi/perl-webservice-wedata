@@ -10,6 +10,8 @@ my $builder = Module::Build->new(
     requires => {
         'Test::More' => 0,
         'version'    => 0,
+        'LWP::UserAgent' => 0,
+        'JSON::XX'   => 0,
     },
     add_to_cleanup      => [ 'WebService-Wedata-*' ],
 );

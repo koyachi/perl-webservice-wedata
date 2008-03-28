@@ -3,18 +3,159 @@ package WebService::Wedata;
 use warnings;
 use strict;
 use Carp;
+use LWP::UserAgent;
+use JSON::XS;
+use WebService::Wedata::Database;
+
+use Data::Dumper;
+
 
 use version; 
 our $VERSION = qv('0.0.3');
+our $URL_BASE = 'http://wedata.net';
 
-# Other recommended modules (uncomment to use):
-#  use IO::Prompt;
-#  use Perl6::Export;
-#  use Perl6::Slurp;
-#  use Perl6::Say;
+sub new {
+    my($class, $api_key) = @_;
+    bless {
+        ua => LWP::UserAgent->new,
+        api_key => $api_key,
+    }, $class;
+}
 
+sub get_databases {
+    my($self) = @_;
+    $self->get_database;
+}
 
-# Module implementation here
+sub get_database {
+    my($self, $dbname, $page) = @_;
+    my $path = ($dbname) ? "/databases/$dbname.json" : '/databases.json';
+    $page ||= '';
+    my $url = $URL_BASE . $path;
+    my $response = $self->{ua}->get($url, page => $page);
+    if ($response->is_success) {
+        my $data = decode_json($response->content);
+        my $parse_response = sub {
+            my($data) = @_;
+            my @required_keys = split / /, $data->{required_keys};
+            my @optional_keys = (defined $data->{optional_keys}) ? split / /, $data->{optional_keys} : ();
+            my $database = WebService::Wedata::Database->new(
+                ua => $self->{ua},
+                api_key => $self->{api_key},
+                name => $data->{name},
+                description => $data->{description},
+                resource_url => $data->{resource_url},
+                required_keys => [@required_keys],
+                optional_keys => [@optional_keys],
+                permit_other_keys => $data->{permit_other_keys},
+            );
+            $database;
+        };
+        if ($dbname) {
+            $parse_response->($data);
+        }
+        else {
+            my $result = [];
+            foreach my $db (@$data) {
+                push @$result, $parse_response->($db);
+            }
+            $result;
+        }
+    }
+    else {
+        #FIXME
+        carp 'Faild to get_database' . $response->status_line;
+        return;
+    }
+}
+
+sub create_database {
+    my($self, @params) = @_;
+    my $params = {@params};
+    croak "require name on create_database\n" unless $params->{name};
+
+    my $param_required_keys = join '%20', @{$params->{required_keys}};
+    my $param_optional_keys = join '%20', @{$params->{optional_keys}};
+    my $param_permit_other_keys = ($params->{permit_other_keys}) ? 'true' : 'false';
+
+    my $url = $URL_BASE . '/databases';
+    my $content = '';
+    $content = join '&',
+        "api_key=$self->{api_key}",
+        "database[name]=$params->{name}",
+        "database[description]=$params->{description}",
+        "database[required_keys]=$param_required_keys",
+        "database[optional_keys=$param_optional_keys",
+        "database[permit_other_keys]=$param_permit_other_keys"
+    ;
+    my $req = HTTP::Request->new(
+        POST => $url,
+        HTTP::Headers->new(
+            'content-type' => 'application/x-www-form-urlencoded',
+            'content-length' => length($content),
+        ),
+        $content,
+    );
+
+    my $response = $self->{ua}->request($req);
+    if ($response->is_success) {
+        my $database = WebService::Wedata::Database->new(
+            ua => $self->{ua},
+            api_key => $self->{api_key},
+            name => $params->{name},
+            description => $params->{description},
+            required_keys => $params->{required_keys},
+            optional_keys => $params->{optional_keys},
+            permit_other_keys => $params->{permit_other_keys},
+            resource_url => $response->header('location'),
+        );
+        $database;
+    }
+    else {
+        print "ERRORRRRRRRRRRRRRRRRRRR\n";
+        print Dumper $response;
+        croak $response->status_line;
+    }
+}
+
+sub update_database {
+    my($self, @params) = @_;
+    my $params = {@params};
+    croak "require name on create_database\n" unless $params->{name};
+
+    $params->{api_key} = $self->{api_key};
+    $params->{resource_url} = $URL_BASE . '/databases/' . $params->{name};
+    my $req = WebService::Wedata::Database::_make_update_request($params);
+
+    my $response = $self->{ua}->request($req);
+    if ($response->is_success) {
+        $self->get_database($params->{name});
+    }
+    else {
+        print "ERRORRRRRRRRRRRRRRRRRRR\n";
+        print Dumper $response;
+        croak $response->status_line;
+    }
+}
+
+sub delete_database {
+    my($self, @params) = @_;
+    my $params = {@params};
+    croak "require name on create_database\n" unless $params->{name};
+
+    $params->{api_key} = $self->{api_key};
+    my $req = WebService::Wedata::Database::_make_delete_request($params);
+    my $response = $self->{ua}->request($req);
+    if ($response->is_success) {
+        return;
+    }
+    else {
+        # FIXME
+        print "ERRORRRRRRRRRRRRRRRRRRR\n";
+        print Dumper $response;
+        croak $response->status_line;
+    }
+}
 
 
 1; # Magic true value required at end of module
@@ -22,7 +163,7 @@ __END__
 
 =head1 NAME
 
-WebService::Wedata - [One line description of module's purpose here]
+WebService::Wedata - Perl Interface for wedata.net
 
 
 =head1 VERSION
@@ -33,27 +174,52 @@ This document describes WebService::Wedata version 0.0.1
 =head1 SYNOPSIS
 
     use WebService::Wedata;
-
-=for author to fill in:
-    Brief code example(s) here showing commonest usage(s).
-    This section will be as far as many users bother reading
-    so make it as educational and exeplary as possible.
-  
+    
+    my $wedata = WebService::Wedata->new('YOUR_API_KEY');
+    my $database = $wedata->create_database({
+        name => 'database_name',
+        required_keys => [qw/foo bar baz/],
+        optional_keys => [qw/hoge fuga/],
+        permit_other_keys => 'true,'
+    });
+    
+    my $item = $database->create_item({
+        name => 'item_name',
+        data => {
+            foo => 'foo_value',
+            bar => 'bar_value',
+            baz => 'baz_value',
+        }
+    });
+    my $item = $database->update_item({
+        id => 10,
+        data => {
+            foo => 'foo_updated_value',
+            bar => 'bar_updated_value',
+            baz => 'baz_updated_value',
+        }
+    });
+    
+    $database->delete_item({id => 10});
+    $wedata->delete_database('database_name');
   
 =head1 DESCRIPTION
 
-=for author to fill in:
-    Write a full description of the module and its features here.
-    Use subsections (=head2, =head3) as appropriate.
-
+Perl Interface for wedata.net
 
 =head1 INTERFACE 
 
-=for author to fill in:
-    Write a separate section listing the public components of the modules
-    interface. These normally consist of either subroutines that may be
-    exported, or methods that may be called on objects belonging to the
-    classes provided by the module.
+=head2 new
+
+=head2 get_databases
+
+=head2 get_database
+
+=head2 create_database
+
+=head2 update_database
+
+=head2 delete_database
 
 
 =head1 DIAGNOSTICS
@@ -79,57 +245,9 @@ This document describes WebService::Wedata version 0.0.1
 =back
 
 
-=head1 CONFIGURATION AND ENVIRONMENT
-
-=for author to fill in:
-    A full explanation of any configuration system(s) used by the
-    module, including the names and locations of any configuration
-    files, and the meaning of any environment variables or properties
-    that can be set. These descriptions must also include details of any
-    configuration language used.
-  
-WebService::Wedata requires no configuration files or environment variables.
-
-
 =head1 DEPENDENCIES
 
-=for author to fill in:
-    A list of all the other modules that this module relies upon,
-    including any restrictions on versions, and an indication whether
-    the module is part of the standard Perl distribution, part of the
-    module's distribution, or must be installed separately. ]
-
-None.
-
-
-=head1 INCOMPATIBILITIES
-
-=for author to fill in:
-    A list of any modules that this module cannot be used in conjunction
-    with. This may be due to name conflicts in the interface, or
-    competition for system or program resources, or due to internal
-    limitations of Perl (for example, many modules that use source code
-    filters are mutually incompatible).
-
-None reported.
-
-
-=head1 BUGS AND LIMITATIONS
-
-=for author to fill in:
-    A list of known problems with the module, together with some
-    indication Whether they are likely to be fixed in an upcoming
-    release. Also a list of restrictions on the features the module
-    does provide: data types that cannot be handled, performance issues
-    and the circumstances in which they may arise, practical
-    limitations on the size of data sets, special cases that are not
-    (yet) handled, etc.
-
-No bugs have been reported.
-
-Please report any bugs or feature requests to
-C<bug-webservice-wedata@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
+JSON::XS
 
 
 =head1 AUTHOR
