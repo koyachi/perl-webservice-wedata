@@ -88,7 +88,6 @@ $check_updated_item->($item);
 
 $database->delete_item(id => $item_id);
 eval { $item = $database->get_item(id => $item_id); };
-#ok(!$item, "delete $item_name");
 like($@, '/Faild to get_item:404 Not Found/', "delete $item_name");
 
 

@@ -78,7 +78,6 @@ $check_updated_db->($database);
 $wedata->delete_database(name => $db_name);
 
 eval {$database = $wedata->get_database($db_name); };
-#ok(!$database, "delete $db_name");
 like($@, '/Faild to get_database:404 Not Found/', "delete $db_name");
 
 
@@ -101,15 +100,12 @@ sub check_database {
     }
     is(scalar(@{$database->{items}}), 0, 'no items');
 
-#    SKIP: {
-#        skip "FOR NEXT VERSION", 1;
-        is($database->permit_other_keys, $expect->{permit_other_keys},
-           join(' ',
-                'permit_other_keys',
-                $database->permit_other_keys,
-                $expect->{permit_other_keys})
-        );
-#    }
+    is($database->permit_other_keys, $expect->{permit_other_keys},
+       join(' ',
+            'permit_other_keys',
+            $database->permit_other_keys,
+            $expect->{permit_other_keys})
+    );
     is($database->description, $expect->{description}, 'description');
     is($database->resource_url, $expect->{resource_url}, 'resource_url');
 }
