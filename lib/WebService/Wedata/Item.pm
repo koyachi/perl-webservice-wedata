@@ -34,7 +34,7 @@ sub update {
     my $req = _make_update_request($params);
     my $response = $self->database->{ua}->request($req);
     if ($response->is_success) {
-        $self->{data} = [];
+        $self->{data} = {};
         while (my($k, $v) = each(%{ $params->{data} })) {
             $self->set_data($k, $v);
         }
@@ -110,6 +110,16 @@ sub _id_from_resource_url {
     $url;
 }
 
+1;
+__END__
+
+=head1 NAME
+
+WebService::Wedata::Item - Wedata Item object
+
+=head1 DESCRIPTION
+
+Wedata Item object
 
 =head1 METHODS
 
@@ -117,23 +127,32 @@ sub _id_from_resource_url {
 
 =over 4
 
-=item Arguments: $database, $name, \%data?
+=item Arguments: %params($database, $name, %data, $resource_url)
 
 =item Return Value: $item
 
 =back
 
-The Item constructor. Take a parent database(L<WebService::Wedata::Database> instance) and item name.
+Constructor. Take a parent database(L<WebService::Wedata::Database> instance) and item name.
 
   my $database = WebService::Wedata->get_database('AutoPagerize');
-  my $item = WebService::Wedata::Item->new($database, 'new item');
+  my $item = WebService::Wedata::Item->new(
+      database => $database,
+      name => 'new item',
+      resorce_url => ...
+  );
 
 Also take a optional data hash.
 
-  my $item = WebService::Wedata::Item->new($database, 'new item', {
-    url => ...,
-    nextLink => ...,
-    pageElement => ...,
+  my $item = WebService::Wedata::Item->new(
+      database => $database,
+      name => 'new item',
+      data => {
+          url => ...,
+          nextLink => ...,
+          pageElement => ...,
+      },
+      resorce_url => ...
   });
 
 
@@ -147,7 +166,7 @@ Also take a optional data hash.
 
 =back
 
-Set $value to item data hash as $key.
+Set {$key => $value} to item data hash.
 
 
 =head2 update
@@ -184,5 +203,3 @@ Delete self.
 =back
 
 =cut
-
-1;

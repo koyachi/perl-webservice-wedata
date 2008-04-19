@@ -3,7 +3,9 @@
           'conflicts' => {},
           'requires' => {
                           'Test::More' => 0,
-                          'version' => 0
+                          'LWP::UserAgent' => 0,
+                          'version' => 0,
+                          'JSON::XS' => 0
                         },
           'recommends' => {}
         }

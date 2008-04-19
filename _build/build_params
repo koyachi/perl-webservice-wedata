@@ -20,13 +20,13 @@
                                                               'version' => [
                                                                              0,
                                                                              0,
-                                                                             3
+                                                                             4
                                                                            ]
                                                             }, 'version' ),
                                        'version' => [
                                                       0,
                                                       0,
-                                                      3
+                                                      4
                                                     ]
                                      }, 'Module::Build::Version' ),
             'pod_files' => undef,
@@ -249,7 +249,9 @@
             'create_packlist' => 1,
             'requires' => {
                             'Test::More' => 0,
-                            'version' => 0
+                            'LWP::UserAgent' => 0,
+                            'version' => 0,
+                            'JSON::XS' => 0
                           },
             'install_path' => {},
             'pm_files' => undef,

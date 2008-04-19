@@ -101,13 +101,13 @@ sub delete {
         # clean up
         $self->name('');
         $self->description('');
-        $self->required_keys = [];
-        $self->optional_keys = [];
+        $self->{required_keys} = [];
+        $self->{optional_keys} = [];
         $self->resource_url('');
         $self->updated_at('');
         $self->created_at('');
         $self->created_by('');
-        $self->items = [];
+        $self->{items} = [];
         return;
     }
     else {
@@ -264,3 +264,161 @@ sub delete_item {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+WebService::Wedata::Database - Wedata Database object
+
+=head1 DESCRIPTION
+
+Wedata Database object
+
+=head1 METHODS
+
+=head2 new
+
+=over 4
+
+=item Arguments: %params($ua, $api_key, $name, $description, $resource_url, @required_keys, @optional_keys, $permit_other_keys)
+
+=item Return Value: $database
+
+=back
+
+  my $database = WebService::Databse->new(
+      ua => LWP::UserAgent->new,
+      api_key => 'YOUR_API_KEY',
+      name => 'YOUR_DATABASE_NAME',
+      description => 'DESCRIPTUON',
+      required_keys => [qw/foo bar baz/],
+      optional_keys => [qw/hoge fuga/],
+      permit_other_keys => 1,
+  );
+
+Constructor.
+
+
+=head2 add_required_key
+
+=over 4
+
+=item Arguments: $key
+
+=item Return Value: none
+
+=back
+
+Add $key to required_keys.
+
+
+=head2 add_optional_key
+
+=over 4
+
+=item Arguments: $key
+
+=item Return Value: none
+
+=back
+
+Add $key to optional_keys.
+
+
+=head2 update
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: none
+
+=back
+
+  $database->description('updated description');
+  $database->update;
+
+Update database.
+
+
+=head2 delete
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: none
+
+=back
+
+Delete database.
+
+
+=head2 get_items
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: @items
+
+=back
+
+  my @items = $database->get_items;
+
+Get all items in $database.
+
+
+=head2 get_item
+
+=over 4
+
+=item Arguments: %params($id)
+
+=item Return Value: $item
+
+=back
+
+Get specified $id item. Return value is instance of WebService::Wedata::Item.
+
+
+=head2 create_item
+
+=over 4
+
+=item Arguments: %params($name, %data(key => value))
+
+=item Return Value: $item
+
+=back
+
+Crete $item.
+
+
+=head2 update_item
+
+=over 4
+
+=item Arguments: %params($name, %data(key => value))
+
+=item Return Value: $item
+
+=back
+
+Update $item.
+
+
+=head2 delete_item
+
+=over 4
+
+=item Arguments: %params($id)
+
+=item Return Value: none
+
+=back
+
+Delete specified $id item.
+
+
+=cut

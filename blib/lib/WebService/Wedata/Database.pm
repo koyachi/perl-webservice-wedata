@@ -7,10 +7,6 @@ use WebService::Wedata::Item;
 use base qw/Class::Accessor::Fast/;
 __PACKAGE__->mk_accessors(qw/ua api_key name description resource_url permit_other_keys updated_at created_at created_by/);
 
-
-use Data::Dumper;
-
-
 sub new {
     my($class, %params) = @_;
 
@@ -19,7 +15,7 @@ sub new {
         optional_keys => [],
         items => [],
     }, $class;
-    foreach my $k (qw/ua api_key name description resource_url permit_other_keys  updated_at created_at created_by/) {
+    foreach my $k (qw/ua api_key name description resource_url updated_at created_at created_by/) {
         $self->set($k, $params{$k}) if ($params{$k});
     }
     foreach my $k (@{ $params{required_keys} }) {
@@ -28,7 +24,12 @@ sub new {
     foreach my $k (@{ $params{optional_keys} }) {
         $self->add_optional_key($k);
     }
-    $self->permit_other_keys('false') unless $self->permit_other_keys;
+    if ($params{permit_other_keys} == 1 || $params{permit_other_keys} eq 'true') {
+        $self->permit_other_keys(1);
+    }
+    else {
+        $self->permit_other_keys(0);
+    }
     $self;
 }
 
@@ -59,9 +60,7 @@ sub update {
         return;
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to update database:' . $response->status_line;
     }
 }
 
@@ -102,19 +101,17 @@ sub delete {
         # clean up
         $self->name('');
         $self->description('');
-        $self->required_keys = [];
-        $self->optional_keys = [];
+        $self->{required_keys} = [];
+        $self->{optional_keys} = [];
         $self->resource_url('');
         $self->updated_at('');
         $self->created_at('');
         $self->created_by('');
-        $self->items = [];
+        $self->{items} = [];
         return;
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to delete database:' . $response->status_line;
     }
 }
 
@@ -185,8 +182,7 @@ sub get_item {
         }
     }
     else {
-        # FIXME
-        carp 'Failed to get_item:' . $response->status_line;
+        croak 'Faild to get_item:' . $response->status_line;
         return;
     }
 }
@@ -227,10 +223,7 @@ sub create_item {
         $new_item;
     }
     else {
-        #FIXME
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to create_item:' . $response->status_line;
     }
 }
 
@@ -248,9 +241,7 @@ sub update_item {
         $self->get_item(id => $params->{id});
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to update_item:' . $response->status_line;
     }
 }
 
@@ -268,11 +259,166 @@ sub delete_item {
         return;
     }
     else {
-        # FIXME
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to delete_item:' . $response->status_line;
     }
 }
 
 1;
+__END__
+
+=head1 NAME
+
+WebService::Wedata::Database - Wedata Database object
+
+=head1 DESCRIPTION
+
+Wedata Database object
+
+=head1 METHODS
+
+=head2 new
+
+=over 4
+
+=item Arguments: %params($ua, $api_key, $name, $description, $resource_url, @required_keys, @optional_keys, $permit_other_keys)
+
+=item Return Value: $database
+
+=back
+
+  my $database = WebService::Databse->new(
+      ua => LWP::UserAgent->new,
+      api_key => 'YOUR_API_KEY',
+      name => 'YOUR_DATABASE_NAME',
+      description => 'DESCRIPTUON',
+      required_keys => [qw/foo bar baz/],
+      optional_keys => [qw/hoge fuga/],
+      permit_other_keys => 1,
+  );
+
+Constructor.
+
+
+=head2 add_required_key
+
+=over 4
+
+=item Arguments: $key
+
+=item Return Value: none
+
+=back
+
+Add $key to required_keys.
+
+
+=head2 add_optional_key
+
+=over 4
+
+=item Arguments: $key
+
+=item Return Value: none
+
+=back
+
+Add $key to optional_keys.
+
+
+=head2 update
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: none
+
+=back
+
+  $database->description('updated description');
+  $database->update;
+
+Update database.
+
+
+=head2 delete
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: none
+
+=back
+
+Delete database.
+
+
+=head2 get_items
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: @items
+
+=back
+
+  my @items = $database->get_items;
+
+Get all items in $database.
+
+
+=head2 get_item
+
+=over 4
+
+=item Arguments: %params($id)
+
+=item Return Value: $item
+
+=back
+
+Get specified $id item. Return value is instance of WebService::Wedata::Item.
+
+
+=head2 create_item
+
+=over 4
+
+=item Arguments: %params($name, %data(key => value))
+
+=item Return Value: $item
+
+=back
+
+Crete $item.
+
+
+=head2 update_item
+
+=over 4
+
+=item Arguments: %params($name, %data(key => value))
+
+=item Return Value: $item
+
+=back
+
+Update $item.
+
+
+=head2 delete_item
+
+=over 4
+
+=item Arguments: %params($id)
+
+=item Return Value: none
+
+=back
+
+Delete specified $id item.
+
+
+=cut

@@ -7,8 +7,7 @@ use LWP::UserAgent;
 use JSON::XS;
 use WebService::Wedata::Database;
 
-use version; 
-our $VERSION = qv('0.0.4');
+use version; our $VERSION = qv('0.0.4');
 our $URL_BASE = 'http://wedata.net';
 
 sub new {
@@ -165,77 +164,117 @@ This document describes WebService::Wedata version 0.0.4
     use WebService::Wedata;
     
     my $wedata = WebService::Wedata->new('YOUR_API_KEY');
-    my $database = $wedata->create_database({
+    my $database = $wedata->create_database(
         name => 'database_name',
         required_keys => [qw/foo bar baz/],
         optional_keys => [qw/hoge fuga/],
         permit_other_keys => 'true,'
-    });
+    );
     
-    my $item = $database->create_item({
+    my $item = $database->create_item(
         name => 'item_name',
         data => {
             foo => 'foo_value',
             bar => 'bar_value',
             baz => 'baz_value',
         }
-    });
-    my $item = $database->update_item({
-        id => 10,
-        data => {
-            foo => 'foo_updated_value',
-            bar => 'bar_updated_value',
-            baz => 'baz_updated_value',
-        }
-    });
+    );
+    $item->update(
+        foo => 'foo_updated_value',
+        bar => 'bar_updated_value',
+        baz => 'baz_updated_value',
+    );
     
-    $database->delete_item({id => 10});
-    $wedata->delete_database('database_name');
+    $item->delete;
+    $database->delete;
   
 =head1 DESCRIPTION
 
 Perl Interface for wedata.net
 
-=head1 INTERFACE 
+=head1 METHODS
 
 =head2 new
 
+=over 4
+
+=item Arguments: $api_key
+
+=item Return Value: $wedata_instance
+
+=back
+
+Constructor.
+
+
 =head2 get_databases
+
+=over 4
+
+=item Arguments: none
+
+=item Return Value: @databases
+
+=back
+
+Get all databases.
+
 
 =head2 get_database
 
+=over 4
+
+=item Arguments: $dbname, $page
+
+=item Return Value: $database
+
+=back
+
+Get specified database. Return value is instance of WebService::Wedata::Database.
+
+
 =head2 create_database
+
+=over 4
+
+=item Arguments: %params(name, description, required_keys, optional_keys, permit_other_keys)
+
+=item Return Value: $database
+
+=back
+
+Create databse. Return value is instance of WebService::Wedata::Database.
+
 
 =head2 update_database
 
-=head2 delete_database
+=over 4
 
+=item Arguments: %params(name, description, required_keys, optional_keys, permit_other_keys)
 
-=head1 DIAGNOSTICS
-
-=for author to fill in:
-    List every single error and warning message that the module can
-    generate (even the ones that will "never happen"), with a full
-    explanation of each problem, one or more likely causes, and any
-    suggested remedies.
-
-=over
-
-=item C<< Error message here, perhaps with %s placeholders >>
-
-[Description of error here]
-
-=item C<< Another error message here >>
-
-[Description of error here]
-
-[Et cetera, et cetera]
+=item Return Value: $database
 
 =back
+
+Update databse. Return value is instance of WebService::Wedata::Database.
+
+
+=head2 delete_database
+
+=over 4
+
+=item Arguments: %params(name)
+
+=item Return Value: none
+
+=back
+
+Delte database.
 
 
 =head1 DEPENDENCIES
 
+LWP::UserAgent
 JSON::XS
 
 
@@ -274,3 +313,9 @@ RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
 FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
 SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
+
+=head1 SEE ALSO
+
+L<http://wedata.net/help/api>
+
+=cut
