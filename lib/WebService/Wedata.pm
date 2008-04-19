@@ -7,11 +7,8 @@ use LWP::UserAgent;
 use JSON::XS;
 use WebService::Wedata::Database;
 
-use Data::Dumper;
-
-
 use version; 
-our $VERSION = qv('0.0.3');
+our $VERSION = qv('0.0.4');
 our $URL_BASE = 'http://wedata.net';
 
 sub new {
@@ -63,9 +60,7 @@ sub get_database {
         }
     }
     else {
-        #FIXME
-        carp 'Faild to get_database' . $response->status_line;
-        return;
+        croak 'Faild to get_database:' . $response->status_line;
     }
 }
 
@@ -74,6 +69,7 @@ sub create_database {
     my $params = {@params};
     croak "require name on create_database\n" unless $params->{name};
 
+    my $param_description = $params->{description} || '';
     my $param_required_keys = join '%20', @{$params->{required_keys}};
     my $param_optional_keys = join '%20', @{$params->{optional_keys}};
     my $param_permit_other_keys = ($params->{permit_other_keys}) ? 'true' : 'false';
@@ -83,7 +79,7 @@ sub create_database {
     $content = join '&',
         "api_key=$self->{api_key}",
         "database[name]=$params->{name}",
-        "database[description]=$params->{description}",
+        "database[description]=$param_description",
         "database[required_keys]=$param_required_keys",
         "database[optional_keys=$param_optional_keys",
         "database[permit_other_keys]=$param_permit_other_keys"
@@ -106,15 +102,13 @@ sub create_database {
             description => $params->{description},
             required_keys => $params->{required_keys},
             optional_keys => $params->{optional_keys},
-            permit_other_keys => $params->{permit_other_keys},
+            permit_other_keys => ($params->{permit_other_keys} == 1) ? 1 : 0,
             resource_url => $response->header('location'),
         );
         $database;
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to create_database:' . $response->status_line;
     }
 }
 
@@ -132,9 +126,7 @@ sub update_database {
         $self->get_database($params->{name});
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to update_database:' . $response->status_line;
     }
 }
 
@@ -150,10 +142,7 @@ sub delete_database {
         return;
     }
     else {
-        # FIXME
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to delete_database:' . $response->status_line;
     }
 }
 
@@ -168,7 +157,7 @@ WebService::Wedata - Perl Interface for wedata.net
 
 =head1 VERSION
 
-This document describes WebService::Wedata version 0.0.1
+This document describes WebService::Wedata version 0.0.4
 
 
 =head1 SYNOPSIS

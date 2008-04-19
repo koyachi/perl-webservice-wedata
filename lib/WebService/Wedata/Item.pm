@@ -5,10 +5,6 @@ use Carp;
 use base qw/Class::Accessor::Fast/;
 __PACKAGE__->mk_accessors(qw/database name resource_url updated_at created_at created_by/);
 
-
-use Data::Dumper;
-
-
 sub new {
     my($class, %params) = @_;
     my $self = bless {
@@ -44,9 +40,7 @@ sub update {
         }
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to update item:' . $response->status_line;
     }
 }
 
@@ -91,9 +85,7 @@ sub delete {
         return;
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to delete item:' . $response->status_line;
     }
 }
 

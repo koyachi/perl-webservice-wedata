@@ -7,10 +7,6 @@ use WebService::Wedata::Item;
 use base qw/Class::Accessor::Fast/;
 __PACKAGE__->mk_accessors(qw/ua api_key name description resource_url permit_other_keys updated_at created_at created_by/);
 
-
-use Data::Dumper;
-
-
 sub new {
     my($class, %params) = @_;
 
@@ -19,7 +15,7 @@ sub new {
         optional_keys => [],
         items => [],
     }, $class;
-    foreach my $k (qw/ua api_key name description resource_url permit_other_keys  updated_at created_at created_by/) {
+    foreach my $k (qw/ua api_key name description resource_url updated_at created_at created_by/) {
         $self->set($k, $params{$k}) if ($params{$k});
     }
     foreach my $k (@{ $params{required_keys} }) {
@@ -28,7 +24,12 @@ sub new {
     foreach my $k (@{ $params{optional_keys} }) {
         $self->add_optional_key($k);
     }
-    $self->permit_other_keys('false') unless $self->permit_other_keys;
+    if ($params{permit_other_keys} == 1 || $params{permit_other_keys} eq 'true') {
+        $self->permit_other_keys(1);
+    }
+    else {
+        $self->permit_other_keys(0);
+    }
     $self;
 }
 
@@ -59,9 +60,7 @@ sub update {
         return;
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to update database:' . $response->status_line;
     }
 }
 
@@ -112,9 +111,7 @@ sub delete {
         return;
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to delete database:' . $response->status_line;
     }
 }
 
@@ -185,8 +182,7 @@ sub get_item {
         }
     }
     else {
-        # FIXME
-        carp 'Failed to get_item:' . $response->status_line;
+        croak 'Faild to get_item:' . $response->status_line;
         return;
     }
 }
@@ -227,10 +223,7 @@ sub create_item {
         $new_item;
     }
     else {
-        #FIXME
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to create_item:' . $response->status_line;
     }
 }
 
@@ -248,9 +241,7 @@ sub update_item {
         $self->get_item(id => $params->{id});
     }
     else {
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to update_item:' . $response->status_line;
     }
 }
 
@@ -268,10 +259,7 @@ sub delete_item {
         return;
     }
     else {
-        # FIXME
-        print "ERRORRRRRRRRRRRRRRRRRRR\n";
-        print Dumper $response;
-        croak $response->status_line;
+        croak 'Faild to delete_item:' . $response->status_line;
     }
 }
 

@@ -27,7 +27,7 @@ $database = $wedata->create_database(
     description => 'description about created database',
     required_keys => [qw/foo bar baz/],
     optional_keys => [qw/hoge fuga/],
-    permit_other_keys => 'true',
+    permit_other_keys => 1,
 );
 
 my $check_created_db = sub {             # tests = 5 + 3 + 2
@@ -37,7 +37,7 @@ my $check_created_db = sub {             # tests = 5 + 3 + 2
         description => 'description about created database',
         required_keys => [qw/foo bar baz/],
         optional_keys => [qw/hoge fuga/],
-        permit_other_keys => 'true',
+        permit_other_keys => 1,
         resource_url => "http://wedata.net/databases/$db_name",
     });
 };
@@ -54,7 +54,7 @@ $database = $wedata->update_database(
     description => 'description about updated database',
     required_keys => [qw/foo_up bar_up baz_up/],
     optional_keys => [qw/hoge_up fuga_up/],
-    permit_other_keys => 'false',
+    permit_other_keys => '',
 );
 my $check_updated_db = sub {             # tests = 5 + 3 + 2
     my($database) = @_;
@@ -63,7 +63,7 @@ my $check_updated_db = sub {             # tests = 5 + 3 + 2
         description => 'description about updated database',
         required_keys => [qw/foo_up bar_up baz_up/],
         optional_keys => [qw/hoge_up fuga_up/],
-        permit_other_keys => 'false',
+        permit_other_keys => 0,
         resource_url => "http://wedata.net/databases/$db_name",
     });
 };
@@ -77,8 +77,10 @@ $check_updated_db->($database);
 # delete
 $wedata->delete_database(name => $db_name);
 
-$database = $wedata->get_database($db_name);
-ok(!$database, "delete $db_name");
+eval {$database = $wedata->get_database($db_name); };
+#ok(!$database, "delete $db_name");
+like($@, '/Faild to get_database:404 Not Found/', "delete $db_name");
+
 
 
 
@@ -99,15 +101,15 @@ sub check_database {
     }
     is(scalar(@{$database->{items}}), 0, 'no items');
 
-    SKIP: {
-        skip "FOR NEXT VERSION", 1;
-        is($database->permit_other_keys eq $expect->{permit_other_keys},
+#    SKIP: {
+#        skip "FOR NEXT VERSION", 1;
+        is($database->permit_other_keys, $expect->{permit_other_keys},
            join(' ',
                 'permit_other_keys',
                 $database->permit_other_keys,
                 $expect->{permit_other_keys})
         );
-    }
+#    }
     is($database->description, $expect->{description}, 'description');
     is($database->resource_url, $expect->{resource_url}, 'resource_url');
 }

@@ -12,7 +12,7 @@ my $database = $wedata->create_database(
     name => $db_name,
     required_keys => [qw/foo bar baz/],
     optional_keys => [qw/hoge fuga/],
-    permit_other_keys => 'true',
+    permit_other_keys => 1,
 );
 
 
@@ -87,8 +87,9 @@ $check_updated_item->($item);
 # delete
 
 $database->delete_item(id => $item_id);
-$item = $database->get_item(id => $item_id);
-ok(!$item, "delete $item_name");
+eval { $item = $database->get_item(id => $item_id); };
+#ok(!$item, "delete $item_name");
+like($@, '/Faild to get_item:404 Not Found/', "delete $item_name");
 
 
 # CLEAN UP
