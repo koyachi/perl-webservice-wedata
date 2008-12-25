@@ -1,6 +1,0 @@
-{
-          'WebService-Wedata-v0.0.3' => 1,
-          'WebService-Wedata-v0.0.4' => 1,
-          'blib' => 1,
-          'WebService-Wedata-*' => 1
-        }
